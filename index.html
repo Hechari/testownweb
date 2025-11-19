@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fethi's Anomaly Facility</title>
+    
+    <!-- CSS Loading Sequence -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/character.css">
+    <link rel="stylesheet" href="css/cursor.css">
+    <link rel="stylesheet" href="css/parallax.css">
+    <link rel="stylesheet" href="css/performance.css">
+    
+    <style>
+        /* Critical loading styles */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000011;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #game-container.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-active">
+        <div class="crt-scanline"></div>
+        <div class="loading-text" id="loading-text">INITIALIZING ANOMALY FACILITY...</div>
+        <div id="loading-progress-container">
+            <div id="loading-progress-bar"></div>
+        </div>
+        <div id="loading-details">Booting systems...</div>
+    </div>
+
+    <!-- Main Game Container -->
+    <div id="game-container" class="hidden">
+        <!-- Parallax Background Layers -->
+        <div class="parallax-layer layer-back" data-depth="0.1"></div>
+        <div class="parallax-layer layer-mid" data-depth="0.3"></div>
+        <div class="parallax-layer layer-front" data-depth="0.6"></div>
+        <div class="parallax-layer layer-asteroids" data-depth="0.7"></div>
+        <div class="parallax-layer layer-planets" data-depth="0.8"></div>
+        <div class="parallax-layer layer-facility" data-depth="0.9"></div>
+        <div class="parallax-layer layer-anomaly" data-depth="1.0"></div>
+        
+        <!-- Character Container -->
+        <div id="character-container">
+            <div id="fethi-character" class="character-idle"></div>
+        </div>
+        
+        <!-- CRT Effects Overlay -->
+        <div class="crt-overlay">
+            <div class="crt-scanlines"></div>
+            <div class="crt-flicker"></div>
+            <div class="crt-vignette"></div>
+            <div class="crt-glitch"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript Loading - CRITICAL ORDER -->
+    <script src="js/core/config.js"></script>
+    <script src="js/core/utils.js"></script>
+    
+    <!-- Engine Systems -->
+    <script src="js/engine/pixel-scaling.js"></script>
+    <script src="js/engine/performance-detector.js"></script>
+    <script src="js/engine/game-loop.js"></script>
+    
+    <!-- Core Systems -->
+    <script src="js/systems/audio-system.js"></script>
+    <script src="js/systems/parallax-system.js"></script>
+    <script src="js/systems/cursor-system.js"></script>
+    <script src="js/systems/character-system.js"></script>
+    
+    <!-- Interaction Systems -->
+    <script src="js/interactions/hover-detector.js"></script>
+    <script src="js/interactions/animation-controller.js"></script>
+    
+    <!-- Main Initialization -->
+    <script src="js/core/init.js"></script>
+</body>
+</html>

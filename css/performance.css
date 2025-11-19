@@ -1,0 +1,79 @@
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    #fethi-character {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .energy-cursor {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .loading-text {
+        font-size: 14px;
+    }
+    
+    #loading-progress-container {
+        width: 200px;
+    }
+    
+    /* Reduce animation intensity on mobile */
+    .crt-flicker {
+        animation-duration: 0.3s;
+    }
+    
+    .layer-asteroids,
+    .layer-planets {
+        animation-duration: 120s;
+    }
+}
+
+/* High-performance devices */
+@media (min-width: 1200px) and (min-height: 800px) {
+    .parallax-layer {
+        background-size: cover;
+    }
+    
+    .crt-scanlines {
+        background-size: 100% 3px;
+    }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .crt-scanlines,
+    .crt-flicker,
+    .crt-glitch,
+    #fethi-character,
+    .energy-cursor,
+    .parallax-layer {
+        animation: none !important;
+    }
+    
+    .layer-asteroids,
+    .layer-planets,
+    .layer-anomaly {
+        animation: none !important;
+    }
+}
+
+/* Low-end device optimizations */
+@media (max-width: 480px) {
+    .parallax-layer {
+        background-image: none !important;
+    }
+    
+    .layer-back { background: #000022; }
+    .layer-mid { background: #001133; }
+    .layer-front { background: #002244; }
+    .layer-anomaly { background: #8B00FF; opacity: 0.3; }
+}
+
+/* Print styles */
+@media print {
+    .crt-overlay,
+    .energy-cursor {
+        display: none !important;
+    }
+}

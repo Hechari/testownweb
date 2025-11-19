@@ -1,0 +1,76 @@
+.energy-cursor {
+    position: fixed;
+    width: 32px;
+    height: 32px;
+    pointer-events: none;
+    z-index: 10000;
+    background-size: contain;
+    image-rendering: pixelated;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    filter: drop-shadow(0 0 10px currentColor);
+}
+
+.cursor-default {
+    background-image: url('../assets/cursor/default.png');
+    animation: cursor-float 3s ease-in-out infinite;
+}
+
+.cursor-hover {
+    background-image: url('../assets/cursor/hover-interactive.png');
+    animation: cursor-pulse 1s ease-in-out infinite, cursor-float 3s ease-in-out infinite;
+}
+
+.cursor-click {
+    background-image: url('../assets/cursor/click.png');
+    animation: cursor-click 0.3s ease-out;
+}
+
+.cursor-special {
+    background-image: url('../assets/cursor/special.png');
+    animation: cursor-glow 2s ease-in-out infinite, cursor-float 3s ease-in-out infinite;
+}
+
+/* Fallback styles if cursor images don't load */
+.energy-cursor:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.cursor-default:before { background: #00ffff; }
+.cursor-hover:before { background: #ff00ff; }
+.cursor-click:before { background: #ffff00; }
+.cursor-special:before { background: #00ff00; }
+
+@keyframes cursor-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-5px) scale(1.05); }
+}
+
+@keyframes cursor-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+@keyframes cursor-click {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.8); }
+    100% { transform: scale(1); }
+}
+
+@keyframes cursor-glow {
+    0%, 100% { 
+        filter: drop-shadow(0 0 10px currentColor) 
+                drop-shadow(0 0 20px currentColor);
+    }
+    50% { 
+        filter: drop-shadow(0 0 15px currentColor) 
+                drop-shadow(0 0 30px currentColor)
+                drop-shadow(0 0 45px currentColor);
+    }
+}

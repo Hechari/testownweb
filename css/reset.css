@@ -1,0 +1,29 @@
+/* Complete CSS reset for consistent cross-browser rendering */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Courier New', monospace;
+    cursor: none;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.loading-active {
+    display: flex !important;
+}
