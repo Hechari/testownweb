@@ -4,7 +4,7 @@ class GameInitializer {
         this.systems = new Map();
         this.isInitialized = false;
         this.loadingProgress = 0;
-        this.totalSystems = 8; // Updated total system count
+        this.totalSystems = 8;
     }
 
     async initialize() {
@@ -12,11 +12,13 @@ class GameInitializer {
         console.log('================================');
         
         try {
-            // Phase 1: Configuration and core setup
+            // Phase 1: Basic setup
             this.updateLoadingProgress(10, 'Loading configuration...');
-            await this.verifyDependencies();
             
-            // Phase 2: Core engine systems
+            // Wait a moment for scripts to load
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Phase 2: Initialize core systems first
             this.updateLoadingProgress(20, 'Initializing core systems...');
             await this.initializeCoreSystems();
             
@@ -43,51 +45,56 @@ class GameInitializer {
         }
     }
 
-    async verifyDependencies() {
-        console.log('🔍 Verifying dependencies...');
-        
-        const requiredGlobals = [
-            'CONFIG', 'Utils', 'PIXEL_SCALER', 'PERFORMANCE_DETECTOR',
-            'GAME_LOOP', 'AUDIO_SYSTEM', 'PARALLAX_SYSTEM', 'CURSOR_SYSTEM',
-            'CHARACTER_SYSTEM', 'HOVER_DETECTOR', 'ANIMATION_CONTROLLER'
-        ];
-
-        const missing = [];
-        
-        for (const globalName of requiredGlobals) {
-            if (typeof window[globalName] === 'undefined') {
-                missing.push(globalName);
-                console.error(`❌ Missing: ${globalName}`);
-            } else {
-                console.log(`✅ Found: ${globalName}`);
-            }
-        }
-
-        if (missing.length > 0) {
-            throw new Error(`Missing required dependencies: ${missing.join(', ')}`);
-        }
-
-        console.log('✅ All dependencies verified');
-    }
-
     async initializeCoreSystems() {
         console.log('⚙️ Initializing core systems...');
         
+        // Initialize core systems in correct order
         const coreSystems = [
-            { name: 'config', instance: window.CONFIG },
-            { name: 'utils', instance: window.Utils },
-            { name: 'pixelScaling', instance: window.PIXEL_SCALER },
-            { name: 'performance', instance: window.PERFORMANCE_DETECTOR },
-            { name: 'gameLoop', instance: window.GAME_LOOP }
+            { 
+                name: 'pixelScaling', 
+                instance: window.PIXEL_SCALER,
+                init: () => {
+                    if (window.PIXEL_SCALER && window.PIXEL_SCALER.init) {
+                        window.PIXEL_SCALER.init();
+                        return true;
+                    }
+                    return false;
+                }
+            },
+            { 
+                name: 'performance', 
+                instance: window.PERFORMANCE_DETECTOR,
+                init: () => true // Already initialized
+            },
+            { 
+                name: 'gameLoop', 
+                instance: window.GAME_LOOP,
+                init: () => true // Already initialized
+            }
         ];
         
         for (const system of coreSystems) {
-            if (system.instance) {
-                this.systems.set(system.name, system.instance);
-                console.log(`✅ ${system.name} system ready`);
-            } else {
-                console.warn(`⚠️ ${system.name} system not found`);
+            try {
+                if (system.instance) {
+                    if (system.init) {
+                        const success = system.init();
+                        if (success) {
+                            this.systems.set(system.name, system.instance);
+                            console.log(`✅ ${system.name} system ready`);
+                        } else {
+                            console.warn(`⚠️ ${system.name} system initialization failed`);
+                        }
+                    } else {
+                        this.systems.set(system.name, system.instance);
+                        console.log(`✅ ${system.name} system ready`);
+                    }
+                } else {
+                    console.warn(`⚠️ ${system.name} system not found`);
+                }
+            } catch (error) {
+                console.error(`❌ Error initializing ${system.name}:`, error);
             }
+            
             this.updateLoadingProgress(20 + (30 / coreSystems.length), `Initializing ${system.name}...`);
         }
     }
@@ -96,10 +103,30 @@ class GameInitializer {
         console.log('🎮 Initializing game systems...');
         
         const gameSystems = [
-            { name: 'audio', instance: window.AUDIO_SYSTEM, initMethod: 'init' },
-            { name: 'parallax', instance: window.PARALLAX_SYSTEM, initMethod: 'init' },
-            { name: 'cursor', instance: window.CURSOR_SYSTEM, initMethod: 'init' },
-            { name: 'character', instance: window.CHARACTER_SYSTEM, initMethod: 'init' }
+            { 
+                name: 'audio', 
+                instance: window.AUDIO_SYSTEM, 
+                initMethod: 'init',
+                optional: false
+            },
+            { 
+                name: 'parallax', 
+                instance: window.PARALLAX_SYSTEM, 
+                initMethod: 'init',
+                optional: false
+            },
+            { 
+                name: 'cursor', 
+                instance: window.CURSOR_SYSTEM, 
+                initMethod: 'init',
+                optional: false
+            },
+            { 
+                name: 'character', 
+                instance: window.CHARACTER_SYSTEM, 
+                initMethod: 'init',
+                optional: false
+            }
         ];
         
         for (const system of gameSystems) {
@@ -109,10 +136,16 @@ class GameInitializer {
                     this.systems.set(system.name, system.instance);
                     console.log(`✅ ${system.name} system ready`);
                 } else {
-                    console.warn(`⚠️ ${system.name} system or init method not found`);
+                    const message = `⚠️ ${system.name} system or init method not found`;
+                    if (system.optional) {
+                        console.warn(message);
+                    } else {
+                        console.error(message);
+                    }
                 }
             } catch (error) {
                 console.error(`❌ Failed to initialize ${system.name}:`, error);
+                // Continue with other systems even if one fails
             }
             
             this.updateLoadingProgress(40 + (30 / gameSystems.length), `Loading ${system.name}...`);
@@ -123,8 +156,18 @@ class GameInitializer {
         console.log('🎯 Initializing interaction systems...');
         
         const interactionSystems = [
-            { name: 'hoverDetector', instance: window.HOVER_DETECTOR, initMethod: 'init' },
-            { name: 'animationController', instance: window.ANIMATION_CONTROLLER, initMethod: 'init' }
+            { 
+                name: 'hoverDetector', 
+                instance: window.HOVER_DETECTOR, 
+                initMethod: 'init',
+                optional: false
+            },
+            { 
+                name: 'animationController', 
+                instance: window.ANIMATION_CONTROLLER, 
+                initMethod: 'init',
+                optional: false
+            }
         ];
         
         for (const system of interactionSystems) {
@@ -134,7 +177,12 @@ class GameInitializer {
                     this.systems.set(system.name, system.instance);
                     console.log(`✅ ${system.name} system ready`);
                 } else {
-                    console.warn(`⚠️ ${system.name} system or init method not found`);
+                    const message = `⚠️ ${system.name} system or init method not found`;
+                    if (system.optional) {
+                        console.warn(message);
+                    } else {
+                        console.error(message);
+                    }
                 }
             } catch (error) {
                 console.error(`❌ Failed to initialize ${system.name}:`, error);
@@ -157,7 +205,7 @@ class GameInitializer {
             if (window.AUDIO_SYSTEM) {
                 window.AUDIO_SYSTEM.enableAudio();
             }
-        }, CONFIG.GAME.AMBIENT_AUDIO_DELAY);
+        }, 2000);
         
         console.log('✅ Game systems started');
     }
@@ -190,15 +238,13 @@ class GameInitializer {
         console.log('🌟 FETHI\'S ANOMALY FACILITY 🌟');
         console.log('================================');
         console.log('Systems initialized:', Array.from(this.systems.keys()));
-        console.log('Performance grade:', PERFORMANCE_DETECTOR.getPerformanceGrade());
-        console.log('Optimal settings:', PERFORMANCE_DETECTOR.getOptimalSettings());
         console.log('================================');
         
         // Remove loading screen and start experience
         setTimeout(() => {
             this.removeLoadingScreen();
             this.triggerWelcomeSequence();
-        }, 1500);
+        }, 1000);
     }
 
     removeLoadingScreen() {
@@ -207,9 +253,8 @@ class GameInitializer {
         
         if (loadingScreen && gameContainer) {
             // Add fade-out animation
-            loadingScreen.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+            loadingScreen.style.transition = 'opacity 0.8s ease';
             loadingScreen.style.opacity = '0';
-            loadingScreen.style.transform = 'scale(1.1)';
             
             setTimeout(() => {
                 loadingScreen.classList.remove('loading-active');
@@ -253,17 +298,18 @@ class GameInitializer {
         console.error('💥 Critical initialization error:', error);
         
         const errorMessage = `
-            Initialization failed: ${error.message}
-            
-            Common issues to check:
-            • All asset folders exist in correct locations
-            • File names match exactly (asteroid-1.png vs astroid-1.png)
-            • JavaScript files are loading in correct order
-            • Check browser console for 404 errors
-            
-            Current status:
-            • Systems loaded: ${this.systems.size}
-            • Loading progress: ${this.loadingProgress}%
+Initialization Error: ${error.message}
+
+Systems Status:
+${Array.from(this.systems.entries()).map(([name, system]) => 
+    `• ${name}: ${system ? 'READY' : 'MISSING'}`).join('\n')}
+
+Loading Progress: ${this.loadingProgress}%
+
+Troubleshooting:
+1. Check browser console for 404 errors
+2. Verify all JavaScript files are loading
+3. Ensure pixel-scaling.js exists in js/engine/
         `;
         
         this.showErrorMessage(errorMessage);
@@ -293,10 +339,9 @@ class GameInitializer {
             <pre style="margin-bottom: 20px; text-align: left; white-space: pre-wrap; font-size: 12px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px;">${message}</pre>
             <div style="margin-bottom: 15px; font-size: 14px;">
                 <strong>Quick checks:</strong><br>
-                • All asset folders exist<br>
-                • File names are correct<br>
-                • Check browser console (F12)<br>
-                • JavaScript loading order
+                • Check browser console (F12) for errors<br>
+                • Verify pixel-scaling.js exists<br>
+                • All JavaScript files loading correctly
             </div>
             <button onclick="location.reload()" style="
                 background: #00ffff;
@@ -308,8 +353,7 @@ class GameInitializer {
                 font-weight: bold;
                 border-radius: 4px;
                 margin: 5px;
-                transition: all 0.3s ease;
-            " onmouseover="this.style.background='#ffff00'" onmouseout="this.style.background='#00ffff'">🔄 Refresh Page</button>
+            ">🔄 Refresh Page</button>
             <button onclick="window.FETHI_FACILITY.debug()" style="
                 background: #ff00ff;
                 color: white;
@@ -320,8 +364,7 @@ class GameInitializer {
                 font-weight: bold;
                 border-radius: 4px;
                 margin: 5px;
-                transition: all 0.3s ease;
-            " onmouseover="this.style.background='#ffff00'; this.style.color='black'" onmouseout="this.style.background='#ff00ff'; this.style.color='white'">🐛 Debug Info</button>
+            ">🐛 Debug Info</button>
         `;
         
         document.body.appendChild(errorDiv);
@@ -332,8 +375,7 @@ class GameInitializer {
             initialized: this.isInitialized,
             progress: this.loadingProgress,
             systems: Array.from(this.systems.keys()),
-            performance: PERFORMANCE_DETECTOR.getPerformanceGrade(),
-            stats: GAME_LOOP ? GAME_LOOP.getStats() : null
+            totalSystems: this.totalSystems
         };
     }
 
@@ -341,11 +383,18 @@ class GameInitializer {
         console.log('🐛 Debug Information:');
         console.log('=====================');
         console.log('Initialization Status:', this.getStatus());
-        console.log('Performance:', PERFORMANCE_DETECTOR.getOptimalSettings());
-        console.log('Systems:');
-        this.systems.forEach((system, name) => {
-            console.log(`  ${name}:`, system.getStatus ? system.getStatus() : 'No status method');
-        });
+        console.log('Available Systems:');
+        console.log('  CONFIG:', !!window.CONFIG);
+        console.log('  Utils:', !!window.Utils);
+        console.log('  PIXEL_SCALER:', !!window.PIXEL_SCALER);
+        console.log('  PERFORMANCE_DETECTOR:', !!window.PERFORMANCE_DETECTOR);
+        console.log('  GAME_LOOP:', !!window.GAME_LOOP);
+        console.log('  AUDIO_SYSTEM:', !!window.AUDIO_SYSTEM);
+        console.log('  PARALLAX_SYSTEM:', !!window.PARALLAX_SYSTEM);
+        console.log('  CURSOR_SYSTEM:', !!window.CURSOR_SYSTEM);
+        console.log('  CHARACTER_SYSTEM:', !!window.CHARACTER_SYSTEM);
+        console.log('  HOVER_DETECTOR:', !!window.HOVER_DETECTOR);
+        console.log('  ANIMATION_CONTROLLER:', !!window.ANIMATION_CONTROLLER);
         console.log('=====================');
     }
 }
@@ -355,11 +404,8 @@ const GAME = new GameInitializer();
 
 // Global debugging and control interface
 window.FETHI_FACILITY = {
-    // Core access
     game: GAME,
     config: window.CONFIG,
-    
-    // System access
     systems: {
         audio: window.AUDIO_SYSTEM,
         character: window.CHARACTER_SYSTEM,
@@ -367,20 +413,12 @@ window.FETHI_FACILITY = {
         parallax: window.PARALLAX_SYSTEM,
         animation: window.ANIMATION_CONTROLLER
     },
-    
-    // Debug methods
     debug: () => GAME.debug(),
     getStatus: () => GAME.getStatus(),
-    restart: () => location.reload(),
-    
-    // Control methods
-    setVolume: (volume) => window.AUDIO_SYSTEM && window.AUDIO_SYSTEM.setMasterVolume(volume),
-    triggerBackflip: (direction = 'east') => window.CHARACTER_SYSTEM && window.CHARACTER_SYSTEM.playBackflip(direction),
-    setParallax: (intensity) => window.PARALLAX_SYSTEM && window.PARALLAX_SYSTEM.setParallaxIntensity(intensity)
+    restart: () => location.reload()
 };
 
 console.log('🔧 Fethi\'s Anomaly Facility - Debug interface available at window.FETHI_FACILITY');
-console.log('   Try: FETHI_FACILITY.debug() for system information');
 
 // Auto-start when DOM is ready
 if (document.readyState === 'loading') {
