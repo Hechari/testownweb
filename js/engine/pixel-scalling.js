@@ -4,28 +4,33 @@ class PixelScaler {
         this.scale = window.CONFIG ? window.CONFIG.PIXEL_SCALE : 3;
         this.baseWidth = 320;
         this.baseHeight = 240;
-        this.init();
     }
 
     init() {
         console.log('🎯 Initializing pixel scaling system...');
         
-        // Apply pixelated rendering to the entire document
-        document.body.style.imageRendering = 'pixelated';
-        document.body.style.transform = `scale(${this.scale})`;
-        document.body.style.transformOrigin = 'top left';
-        document.body.style.width = `${100 / this.scale}vw`;
-        document.body.style.height = `${100 / this.scale}vh`;
-        
-        // Scale the game container specifically
-        const gameContainer = document.getElementById('game-container');
-        if (gameContainer) {
-            gameContainer.style.width = `${window.innerWidth / this.scale}px`;
-            gameContainer.style.height = `${window.innerHeight / this.scale}px`;
-            gameContainer.style.imageRendering = 'pixelated';
+        try {
+            // Apply pixelated rendering to the entire document
+            document.body.style.imageRendering = 'pixelated';
+            document.body.style.transform = `scale(${this.scale})`;
+            document.body.style.transformOrigin = 'top left';
+            document.body.style.width = `${100 / this.scale}vw`;
+            document.body.style.height = `${100 / this.scale}vh`;
+            
+            // Scale the game container specifically
+            const gameContainer = document.getElementById('game-container');
+            if (gameContainer) {
+                gameContainer.style.width = `${window.innerWidth / this.scale}px`;
+                gameContainer.style.height = `${window.innerHeight / this.scale}px`;
+                gameContainer.style.imageRendering = 'pixelated';
+            }
+            
+            console.log(`✅ Pixel scaling applied: ${this.scale}x`);
+            return true;
+        } catch (error) {
+            console.error('❌ Pixel scaling initialization failed:', error);
+            return false;
         }
-        
-        console.log(`✅ Pixel scaling applied: ${this.scale}x`);
     }
 
     updateScale(newScale) {
@@ -45,7 +50,8 @@ class PixelScaler {
         return {
             scale: this.scale,
             baseWidth: this.baseWidth,
-            baseHeight: this.baseHeight
+            baseHeight: this.baseHeight,
+            status: 'ready'
         };
     }
 }
